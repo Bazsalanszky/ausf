@@ -59,7 +59,7 @@ func buildSubscriptionData(
 	nfInstanceIdCond := models.NewNfInstanceIdCond()
 	nfInstanceIdCond.SetNfInstanceId(nfInstanceID)
 	subscriptionData := models.NewSubscriptionData(
-		fmt.Sprintf("%s/nausf-callback/v1/nf-status-notify", ausfSelf.GetIPv4Uri()))
+		fmt.Sprintf("%s/nausf-callback/v1/nf-status-notify", ausfSelf.GetSbiUri()))
 	subscriptionData.SetSubscrCond(models.NfInstanceIdCondAsSubscrCond(nfInstanceIdCond))
 	subscriptionData.SetReqNfType(requestNfType)
 	return subscriptionData

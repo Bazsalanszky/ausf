@@ -16,7 +16,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +28,7 @@ import (
 	"github.com/omec-project/openapi/v2/Nudm_UEAU"
 	"github.com/omec-project/openapi/v2/models"
 	"github.com/omec-project/openapi/v2/utils"
+	"github.com/omec-project/util/sbiaddr"
 )
 
 // atMacAttributeSize is the size in bytes of AT_MAC: type, length, 2 reserved bytes and a 16-byte MAC.
@@ -422,22 +422,14 @@ func GetUdmUrl(nrfUri string) string {
 				if ueauService.GetServiceName() != models.SERVICENAME_NUDM_UEAU {
 					continue
 				}
-				if apiPrefix, ok := ueauService.GetApiPrefixOk(); ok && apiPrefix != nil && *apiPrefix != "" {
-					udmUrlMu.Lock()
-					self.UdmUeauUrl = *apiPrefix
-					udmUrlMu.Unlock()
-					return *apiPrefix
+				url := utils.NFServiceURI(&udmInstance, &ueauService, self.SbiPreference == sbiaddr.PreferIPv6)
+				if url == "" {
+					continue
 				}
-				for _, ueauEndPoint := range ueauService.IpEndPoints {
-					if ueauEndPoint.GetIpv4Address() == "" || ueauEndPoint.GetPort() == 0 {
-						continue
-					}
-					url := string(ueauService.GetScheme()) + "://" + ueauEndPoint.GetIpv4Address() + ":" + strconv.Itoa(int(ueauEndPoint.GetPort()))
-					udmUrlMu.Lock()
-					self.UdmUeauUrl = url
-					udmUrlMu.Unlock()
-					return url
-				}
+				udmUrlMu.Lock()
+				self.UdmUeauUrl = url
+				udmUrlMu.Unlock()
+				return url
 			}
 		}
 		logger.UeAuthPostLog.Errorln("[search UDM UEAU] no usable UDM service endpoints found")
