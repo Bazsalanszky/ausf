@@ -46,11 +46,14 @@ type Configuration struct {
 }
 
 type Sbi struct {
-	Scheme       string `yaml:"scheme"`
-	TLS          *TLS   `yaml:"tls"`
-	RegisterIPv4 string `yaml:"registerIPv4,omitempty"` // IP that is registered at NRF.
-	BindingIPv4  string `yaml:"bindingIPv4,omitempty"`  // IP used to run the server in the node.
-	Port         int    `yaml:"port,omitempty"`
+	Scheme          string `yaml:"scheme"`
+	TLS             *TLS   `yaml:"tls"`
+	RegisterIPv4    string `yaml:"registerIPv4,omitempty"`    // IPv4 address, host name, or env var name (POD_IP, POD_IPS) registered at NRF.
+	RegisterIPv6    string `yaml:"registerIPv6,omitempty"`    // IPv6 address, host name, or env var name registered at NRF.
+	BindingAddr     string `yaml:"bindingAddr,omitempty"`     // listen address of any family; wins over bindingIPv4.
+	BindingIPv4     string `yaml:"bindingIPv4,omitempty"`     // legacy alias of bindingAddr.
+	PreferredFamily string `yaml:"preferredFamily,omitempty"` // IPv4 (default) or IPv6, for own URIs and peer addresses.
+	Port            int    `yaml:"port,omitempty"`
 }
 
 type TLS struct {

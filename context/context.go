@@ -6,13 +6,13 @@
 package context
 
 import (
-	"fmt"
 	"regexp"
 	"sync"
 	"time"
 
 	"github.com/omec-project/ausf/logger"
 	"github.com/omec-project/openapi/v2/models"
+	"github.com/omec-project/util/sbiaddr"
 )
 
 type AUSFContext struct {
@@ -22,8 +22,9 @@ type AUSFContext struct {
 	snRegex                  *regexp.Regexp
 	NfId                     string
 	GroupID                  string
-	RegisterIPv4             string
-	BindingIPv4              string
+	RegisterIPv4             string // IPv4 address or host name registered at the NRF
+	RegisterIPv6             string // IPv6 address registered at the NRF
+	BindingIPv4              string // SBI listen host; despite the name, of any family
 	Url                      string
 	NrfUri                   string
 	UdmUeauUrl               string
@@ -33,6 +34,7 @@ type AUSFContext struct {
 	NfService                map[models.ServiceName]models.NFService
 	PlmnList                 []models.PlmnId
 	SBIPort                  int
+	SbiPreference            sbiaddr.Preference
 	EnableNrfCaching         bool
 	NrfCacheEvictionInterval time.Duration
 }
@@ -111,8 +113,27 @@ func GetAusfUeContext(ref string) *AusfUeContext {
 	return ausfUeContext
 }
 
+// SbiAddrs classifies the configured register hosts (RegisterIPv4 and
+// RegisterIPv6) into the FQDN, IPv4 and IPv6 addresses the AUSF advertises.
+func (context *AUSFContext) SbiAddrs() sbiaddr.RegisterAddrs {
+	addrs, err := sbiaddr.ParseRegister(context.RegisterIPv4, context.RegisterIPv6)
+	if err != nil {
+		// InitAusfContext has already warned about the configured values.
+		logger.ContextLog.Debugf("SBI register address: %v", err)
+	}
+	return addrs
+}
+
+// GetSbiUri is the AUSF's own base URI, scheme://host:port, with an IPv6 host
+// in brackets.
+func (context *AUSFContext) GetSbiUri() string {
+	return context.SbiAddrs().URI(string(context.UriScheme), context.SBIPort, context.SbiPreference)
+}
+
+// GetIPv4Uri is the former name of GetSbiUri, kept for existing callers.
+// Despite the name, the host may be an IPv6 address.
 func (context *AUSFContext) GetIPv4Uri() string {
-	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.RegisterIPv4, context.SBIPort)
+	return context.GetSbiUri()
 }
 
 func AddSuciSupiPairToMap(supiOrSuci string, supi string) {

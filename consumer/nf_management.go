@@ -15,6 +15,7 @@ import (
 	"github.com/omec-project/openapi/v2"
 	"github.com/omec-project/openapi/v2/Nnrf_NFManagement"
 	"github.com/omec-project/openapi/v2/models"
+	openapiutils "github.com/omec-project/openapi/v2/utils"
 )
 
 const errServerNoResponse = "server no response"
@@ -35,7 +36,11 @@ func getNfProfile(ausfContext *ausfContext.AUSFContext, plmnConfig []models.Plmn
 	profile.SetNfInstanceId(ausfContext.NfId)
 	profile.SetNfType(models.NFTYPE_AUSF)
 	profile.SetNfStatus(models.NFSTATUS_REGISTERED)
-	profile.SetIpv4Addresses([]string{ausfContext.RegisterIPv4})
+	addrs := ausfContext.SbiAddrs()
+	if addrs.Empty() {
+		return profile, openapi.ReportError("ausf register address is empty. NF profile cannot be built")
+	}
+	openapiutils.SetNFProfileAddresses(&profile, addrs.FQDN, addrs.IPv4, addrs.IPv6)
 	services := map[string]models.NFService{}
 	serviceList := []models.NFService{}
 	for _, nfService := range ausfContext.NfService {
