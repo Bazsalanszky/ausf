@@ -10,10 +10,11 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -105,7 +106,7 @@ func (ausf *AUSF) Start() {
 	go metrics.InitMetrics()
 
 	self := ausfContext.GetSelf()
-	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.SBIPort)
+	addr := sbiBindAddr(self.BindingIPv4, self.SBIPort)
 
 	if self.EnableNrfCaching {
 		logger.InitLog.Infoln("enable NRF caching feature")
@@ -171,4 +172,16 @@ func (ausf *AUSF) Terminate(cancelServices context.CancelFunc, wg *sync.WaitGrou
 	nfregistration.DeregisterNF()
 	wg.Wait()
 	logger.InitLog.Infoln("AUSF terminated")
+}
+
+// sbiBindAddr returns the host:port the SBI server listens on. net.JoinHostPort
+// brackets an IPv6 literal ("[::]:29509"), which fmt.Sprintf("%s:%d") did not,
+// so an IPv6 bindingIPv4 failed with "too many colons in address". IPv4
+// addresses, hostnames and an empty host give the same string as before. A host
+// that is already bracketed is unwrapped first so it is not bracketed twice.
+func sbiBindAddr(host string, port int) string {
+	if len(host) > 1 && host[0] == '[' && host[len(host)-1] == ']' {
+		host = host[1 : len(host)-1]
+	}
+	return net.JoinHostPort(host, strconv.Itoa(port))
 }
