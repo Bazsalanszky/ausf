@@ -10,6 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.25.0
 	github.com/urfave/cli/v3 v3.14.0
 	go.uber.org/zap v1.28.0
+	go.yaml.in/yaml/v4 v4.0.0
 )
 
 require (
@@ -45,7 +46,6 @@ require (
 	github.com/ugorji/go/codec v1.3.2 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	golang.org/x/arch v0.33.0 // indirect
 	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/net v0.63.0 // indirect
